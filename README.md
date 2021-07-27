@@ -1,4 +1,5 @@
 # pugilism
+
 Because pair-boxes, in bash.
 
 ## Design rationale
@@ -34,3 +35,27 @@ It may seem 'old skool', but the advantages are:
 * reliability, it just works, no missed keystrokes/changes
 * no unequal lag
 * speed, it is very **very** fast
+
+## Usage
+
+Pugilism is a set of scripts that enable you to:
+
+* Define what your pair-box looks like, as a Packer script
+* Build a machine image based upon that definition
+* Create or delete a box on a cloud provider based upon that definition
+
+### To create and push a new machine image
+
+> make build
+
+### To create a new pair-box
+
+> make create-box <name>
+
+### To delete a named pair box
+
+> make delete-box <name>
+
+### To connect to a named pair box
+
+> make ssh <name>
