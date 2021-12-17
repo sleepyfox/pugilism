@@ -1,4 +1,4 @@
-.PHONY: all echo clean build validate
+.PHONY: all echo clean build validate create-box delete-box ssh
 
 OS_USER=`whoami`
 
@@ -28,3 +28,12 @@ validate:
 	-e SCW_SECRET_KEY \
 	-e SCW_ACCESS_KEY \
 	hashicorp/packer:light validate pair-box.pkr.hcl
+
+create-box:
+	@ echo "Not yet implemented"
+
+delete-box:
+	@ echo "Not yet implemented"
+
+ssh:
+	@ echo "Not yet implemented"
