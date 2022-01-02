@@ -1,4 +1,4 @@
-# pugilism
+# Pugilism
 
 Because pair-boxes, in bash.
 
@@ -6,13 +6,13 @@ Because pair-boxes, in bash.
 
 Pairing remotely is hard. There seem to be plenty of solutions, but they either:
 
-* aren't inclusive, and only work on one platform
-* are buggy, to the point of being almost unusable
-* are locally hosted, meaning one person has no lag (hoster), and everyone else has twice the lag
-* force you to use a particular editor (VS Code Liveshare)
-* are sloooooooowwww
-* mysteriously lock up
-* lose changes
+* Aren't inclusive, and only work on one platform
+* Are buggy, to the point of being almost unusable
+* Are locally hosted, meaning one person has no lag (hoster), and everyone else has twice the lag
+* Force you to use a particular editor (VS Code Liveshare)
+* Are sloooooooowwww
+* Mysteriously lock up
+* Lose changes
 * ...
 
 Pairing remotely using TDD with PingPong is even harder.
@@ -59,3 +59,20 @@ Pugilism is a set of scripts that enable you to:
 ### To connect to a named pair box
 
 > make ssh <name>
+
+## Customisation
+
+You will want to customise the image before you `make build`, the most important of these customisations is to add the public key of yourself and any other colleagues or friends that you want to have access to the box. The public keys go in the `keys` folder. These are copied into the image by the Packer script. This is safe because these are _public_ keys.
+
+The second piece of customisation is for your dotfiles. Any file placed into the `dotfiles` directory will be added to the pairing user's home directory.
+
+## Security
+
+This Makefile and Dockerfile make use of several private credentials.
+
+* Your private SSH key
+  This is needed by packer in order to create a Cloud instance that you will be able to SSH into. See [docs](https://www.packer.io/docs/builders/scaleway) for details.
+* Your Scaleway access key and secret key
+  These are needed for packer to be able to access the Scaleway API in order to create or destroy an instance
+
+None of the Pugilism scripts do anything with these credentials, these are only used by Packer and the Scaleway API; this is easily checked by reviewing the scripts themselves, there's very little code.
