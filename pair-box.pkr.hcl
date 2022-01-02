@@ -26,7 +26,7 @@ build {
   }
   provisioner "shell" {
     inline = [
-      "apt -q update && apt install -yq make emacs-nox",
+      "apt-get -q update && apt-get install -yq make emacs-nox",
       "groupadd -g 1000 ${var.user}",
       "useradd -g 1000 -u 1000 ${var.user}",
       "cp /tmp/keys/*.pub /home/${var.user}/.ssh",
