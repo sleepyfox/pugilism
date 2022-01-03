@@ -66,7 +66,17 @@ You will want to customise the image before you `make build`, the most important
 
 The second piece of customisation is for your dotfiles. Any file placed into the `dotfiles` directory will be added to the pairing user's home directory.
 
-## Security
+## Scaleway specific setup
+
+The following environment variables are needed by the Packer Scaleway builder:
+
+* SCW_SECRET_KEY
+* SCW_ACCESS_KEY
+* SCW_DEFAULT_PROJECT_ID
+
+In order to check these are set, you can use `make echo` to check.
+
+## Security note
 
 This Makefile and Dockerfile make use of several private credentials.
 
