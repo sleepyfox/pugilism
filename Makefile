@@ -6,6 +6,9 @@ all:	clean validate build
 
 echo:
 	@ echo "OS_USER set to $(OS_USER)"
+	@ echo "Scaleway access key set to $(SCW_SECRET_KEY)"
+	@ echo "Scaleway secret key set to $(SCW_ACCESS_KEY)"
+	@ echo "Scaleway project ID set to $(SCW_DEFAULT_PROJECT_ID)"
 
 clean:
 	rm -f *~
@@ -18,6 +21,7 @@ build:
 	-w /var/app \
 	-e SCW_SECRET_KEY \
 	-e SCW_ACCESS_KEY \
+	-e SCW_DEFAULT_PROJECT_ID \
 	hashicorp/packer:light build pair-box.pkr.hcl
 
 validate:
@@ -27,6 +31,7 @@ validate:
 	-w /var/app \
 	-e SCW_SECRET_KEY \
 	-e SCW_ACCESS_KEY \
+	-e SCW_DEFAULT_PROJECT_ID \
 	hashicorp/packer:light validate pair-box.pkr.hcl
 
 create-box:
