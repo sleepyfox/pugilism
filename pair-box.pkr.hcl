@@ -36,7 +36,7 @@ build {
     inline = [
       "DEBIAN_FRONTEND=noninteractive apt-get -q update && apt-get install -yq make emacs-nox",
       "groupadd -g ${var.group_id} ${var.user}",
-      "useradd -g ${var.group_id} -u ${var.user_id} -m ${var.user}",
+      "useradd -g ${var.group_id} -u ${var.user_id} -m -s /bin/bash ${var.user} ",
       "mkdir /home/${var.user}/.ssh",
       "chown ${var.user}:${var.user} /home/${var.user}/.ssh",
       "cat /tmp/keys/*.pub > /home/${var.user}/.ssh/authorized_keys",
