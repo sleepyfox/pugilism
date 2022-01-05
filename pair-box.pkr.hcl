@@ -13,13 +13,19 @@ variable "user_id" {
   default = 1001
 }
 
+variable "project_id" {
+  type = string
+  description = "A Scaleway project to build the temp instance in"
+}
+
 source "scaleway" "pugilism" {
-  image = "ubuntu_focal"
+  image = "ubuntu_focal" # we have to start somewhere
   zone = "nl-ams-1"
   commercial_type = "STARDUST1-S"
   ssh_username = "root"
   ssh_private_key_file = "/tmp/.ssh/id_rsa"
-  project_id = "92c1a072-cc1d-4f80-b211-3e042943a32d"
+  project_id = var.project_id
+  image_name = "pair_image"
 }
 
 build {
@@ -40,6 +46,7 @@ build {
       "mkdir /home/${var.user}/.ssh",
       "chown ${var.user}:${var.user} /home/${var.user}/.ssh",
       "cat /tmp/keys/*.pub > /home/${var.user}/.ssh/authorized_keys",
+      "chown ${var.user}:${var.user} /home/${var.user}/.ssh/authorized_keys",
       "chmod 600 /home/${var.user}/.ssh/authorized_keys",
       "cp /tmp/dotfiles/.[^.]* /home/${var.user}"
     ]
