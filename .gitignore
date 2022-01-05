@@ -4,3 +4,6 @@ id_*
 dotfiles
 keys
 packer-manifest.json
+.terraform*
+terraform.tfstate*
+.box_ip
