@@ -13,23 +13,29 @@ variable "user_id" {
   default = 1001
 }
 
-variable "project_id" {
+variable "api_token" {
   type = string
-  description = "A Scaleway project to build the temp instance in"
+  description = "Your Linode API token, supplied frome env var via Make"
 }
 
-source "scaleway" "pugilism" {
-  image = "ubuntu_focal" # we have to start somewhere
-  zone = "nl-ams-1"
-  commercial_type = "STARDUST1-S"
-  ssh_username = "root"
-  ssh_private_key_file = "/tmp/.ssh/id_rsa"
-  project_id = var.project_id
-  image_name = "pair_image"
+locals {
+  timestamp = regex_replace(timestamp(), "[- TZ:]", "")
+}
+
+source "linode" "pugilism" {
+  image             = "linode/alpine3.15"
+  image_description = "Pugilism base image"
+#  image_label       = "pugilism-${local.timestamp}"
+   image_label       = "pair-box"
+  instance_label    = "temporary-linode-${local.timestamp}"
+  instance_type     = "g6-nanode-1"
+  linode_token      = var.api_token
+  region            = "eu-west"
+  ssh_username      = "root"
 }
 
 build {
-  sources = ["source.scaleway.pugilism"]
+  sources = ["source.linode.pugilism"]
   provisioner "file" {
     source = "keys"
     destination = "/tmp"
@@ -40,18 +46,18 @@ build {
   }
   provisioner "shell" {
     inline = [
-      "DEBIAN_FRONTEND=noninteractive apt-get -q update && apt-get install -yq make emacs-nox",
-      "groupadd -g ${var.group_id} ${var.user}",
-      "useradd -g ${var.group_id} -u ${var.user_id} -m -s /bin/bash ${var.user} ",
+      "addgroup -g ${var.group_id} ${var.user}",
+      "adduser -D -G ${var.user} -u ${var.user_id} ${var.user}",
+      "usermod -p '*' ${var.user}", # necessary to allow SSH
       "mkdir /home/${var.user}/.ssh",
       "chown ${var.user}:${var.user} /home/${var.user}/.ssh",
       "cat /tmp/keys/*.pub > /home/${var.user}/.ssh/authorized_keys",
       "chown ${var.user}:${var.user} /home/${var.user}/.ssh/authorized_keys",
       "chmod 600 /home/${var.user}/.ssh/authorized_keys",
-      "cp /tmp/dotfiles/.[^.]* /home/${var.user}"
+      "cp /tmp/dotfiles/.[^.]* /home/${var.user}",
+      "chown ${var.user}:${var.user} /home/${var.user}/.??*",
+      "apk update && apk add make emacs-nox"
     ]
   }
   post-processor "manifest" {}
 }
-
-#scw instance server create type= zone=nl-ams-1 image= root-volume=l:10G name=scw-suspicious-fermi ip=new project-id=92c1a072-cc1d-4f80-b211-3e042943a32d

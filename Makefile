@@ -2,18 +2,19 @@
 
 OS_USER=`whoami`
 BOX_IP=`cat .box_ip | cut -f2 -d '"'`
+PUBLIC_SSH_KEY=`cat ~/.ssh/id_rsa.pub`
 
 all:	clean validate build
 
 echo:
 	@ echo "OS_USER set to $(OS_USER)"
 	@ echo "BOX_IP set to $(BOX_IP)"
-	@ echo "Scaleway access key set to $(SCW_SECRET_KEY)"
-	@ echo "Scaleway secret key set to $(SCW_ACCESS_KEY)"
-	@ echo "Scaleway project ID set to $(SCW_DEFAULT_PROJECT_ID)"
-
+	@ echo "LINODE_TOKEN set to $(LINODE_TOKEN)"
+	@ echo "PUBLIC_SSH_KEY set to $(PUBLIC_SSH_KEY)"
 clean:
-	rm -f *~ .terraform terraform.tfstate* packer-manifest.json
+	if [ -d .terraform ]; then sudo chown -R $(OS_USER):$(OS_USER) .terraform; fi
+	rm -rf .terraform
+	rm -f *~ terraform.tfstate* packer-manifest.json .box_ip
 	docker image prune -f
 
 build:
@@ -21,31 +22,23 @@ build:
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
 	hashicorp/packer:light \
-	build -var "project_id=$(SCW_DEFAULT_PROJECT_ID)" pair-box.pkr.hcl
+	build -force -var "api_token=$(LINODE_TOKEN)" pair-box.pkr.hcl
 
 validate:
 	docker run -it \
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
 	hashicorp/packer:light \
-	validate -var "project_id=$(SCW_DEFAULT_PROJECT_ID)" pair-box.pkr.hcl
+	validate -var "api_token=$(LINODE_TOKEN)" pair-box.pkr.hcl
 
 tf-shell:
 	docker run -it \
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
+	-e LINODE_TOKEN="$(LINODE_TOKEN)" \
 	--entrypoint sh \
 	hashicorp/terraform:1.1.2
 
@@ -56,36 +49,35 @@ tf-init:
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
-	hashicorp/terraform:1.1.2 \
-	init
+	-e LINODE_TOKEN="$(LINODE_TOKEN)" \
+	hashicorp/terraform:1.1.2 init
 
 tf-apply:
 	docker run -it \
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
-	hashicorp/terraform:1.1.2 \
-	apply -var "project_id=$(SCW_DEFAULT_PROJECT_ID)" create-box.tf
+	-e LINODE_TOKEN="$(LINODE_TOKEN)" \
+	hashicorp/terraform:1.1.2 apply -auto-approve \
+	-var "public_ssh_key=$(PUBLIC_SSH_KEY)"
 
 tf-output:
 	docker run -it \
 	-v `pwd`:/var/app \
 	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
 	-w /var/app \
-	-e SCW_SECRET_KEY \
-	-e SCW_ACCESS_KEY \
-	-e SCW_DEFAULT_PROJECT_ID \
+	-e LINODE_TOKEN="$(LINODE_TOKEN)" \
 	hashicorp/terraform:1.1.2 \
 	output box_ip >.box_ip
 
 delete-box:
-	@ echo "Not yet implemented"
+	docker run -it \
+	-v `pwd`:/var/app \
+	-v /home/$(OS_USER)/.ssh:/tmp/.ssh \
+	-w /var/app \
+	-e LINODE_TOKEN="$(LINODE_TOKEN)" \
+	hashicorp/terraform:1.1.2 destroy \
+	-auto-approve -var "public_ssh_key=x"
 
 ssh:
 	ssh -vi ~/.ssh/id_rsa pair@$(BOX_IP)
