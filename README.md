@@ -66,29 +66,30 @@ You will want to customise the image before you `make build`, the most important
 
 The second piece of customisation is for your dotfiles. Any file placed into the `dotfiles` directory will be added to the pairing user's home directory.
 
-## Scaleway specific setup
+### Linode specific items
 
-The following environment variables are needed by the Packer Scaleway builder:
-
-* SCW_SECRET_KEY
-* SCW_ACCESS_KEY
-* SCW_DEFAULT_PROJECT_ID
-
-In order to check these are set, you can use `make echo` to check.
-
-### Apt repository reading errors
-
-There is an issue with Packer and Scaleway instances, in that it will always create an instance in the default security group for the project that you specify. If this doesn't include port 53 TCP and UDP egress then you won't be able to run an outbound DNS query, with the most obvious failure mode being that apt-get won't be able to resolve any of the Ubuntu apt repositories.
-
-The solution for this issue is to create a new security group that has this permission, and make it the default security group for the project that you have specified in SCW_DEFAULT_PROJECT_ID.
+You will need to configure your Linode API token, by assigning it to the environment variable `LINODE_TOKEN`, no other Linode-specific configuration is required.
 
 ## Security note
 
 This Makefile and Dockerfile make use of several private credentials.
 
 * Your private SSH key
-  This is needed by packer in order to create a Cloud instance that you will be able to SSH into. See [docs](https://www.packer.io/docs/builders/scaleway) for details.
-* Your Scaleway access key and secret key
-  These are needed for packer to be able to access the Scaleway API in order to create or destroy an instance
+  This is needed by packer in order to create a Cloud instance that you will be able to SSH into.
+* Your API Key
+  This is needed by both Packer and Terraform in order to create resources on your behalf.
 
-None of the Pugilism scripts do anything with these credentials, these are only used by Packer and the Scaleway API; this is easily checked by reviewing the scripts themselves, there's very little code.
+None of the Pugilism scripts do anything with these credentials, these are only used by Packer and Terraform; this is easily checked by reviewing the scripts themselves, there's very little code.
+
+## Billing
+
+It should go without saying that if you create resources on a Cloud provider's infrastructure, you should expect to be billed for them. 
+
+Pugilism creates the following chargable resources:
+
+* Instances used to create the base-image;
+  This instance used by Packer is only used for a few minutes, and is of the smallest and cheapest instance type, and is then automatically destroyed. Expect minimal charges here.
+* Storage for the custom image that is used as a 'golden master';
+  An Alpine base image is ~550MB, so expect < $0.10/month storage charges. 
+* Instances used to run pair-boxes;
+  You pay for what you use. The default size image is the smallest and cheapest available.
