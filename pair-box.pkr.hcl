@@ -58,7 +58,7 @@ build {
       "chmod 600 /home/${var.user}/.ssh/authorized_keys",
       "cp /tmp/dotfiles/.[^.]* /home/${var.user}",
       "chown ${var.user}:${var.user} /home/${var.user}/.??*",
-      "apk update && apk add make git emacs-nox tmux nodejs"
+      "apk update && apk add make git emacs-nox tmux nodejs npm"
     ]
   }
   post-processor "manifest" {}
