@@ -50,15 +50,17 @@ Pugilism is a set of scripts that enable you to:
 
 ### To create a new pair-box
 
-> make create-box <name>
+> make create-box
 
-### To delete a named pair box
+### To delete a pair box
 
-> make delete-box <name>
+> make delete-box
 
-### To connect to a named pair box
+### To connect to a pair box
 
-> make ssh <name>
+> make ssh
+
+The `ssh` target uses [Agent Forwarding](https://dev.to/levivm/how-to-use-ssh-and-ssh-agent-forwarding-more-secure-ssh-2c32) in order to allow git ssh access on the remote host.
 
 ## Customisation
 

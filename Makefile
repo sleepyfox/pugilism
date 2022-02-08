@@ -80,4 +80,4 @@ delete-box:
 	-auto-approve -var "public_ssh_key=x"
 
 ssh:
-	ssh -vi ~/.ssh/id_rsa pair@$(BOX_IP)
+	ssh -A -i ~/.ssh/id_rsa pair@$(BOX_IP)

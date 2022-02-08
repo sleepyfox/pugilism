@@ -49,6 +49,8 @@ build {
       "addgroup -g ${var.group_id} ${var.user}",
       "adduser -D -G ${var.user} -u ${var.user_id} ${var.user}",
       "usermod -p '*' ${var.user}", # necessary to allow SSH
+      "adduser ${var.user} wheel", # allow user to sudo
+      "echo '%wheel ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers",
       "mkdir /home/${var.user}/.ssh",
       "chown ${var.user}:${var.user} /home/${var.user}/.ssh",
       "cat /tmp/keys/*.pub > /home/${var.user}/.ssh/authorized_keys",
@@ -56,7 +58,7 @@ build {
       "chmod 600 /home/${var.user}/.ssh/authorized_keys",
       "cp /tmp/dotfiles/.[^.]* /home/${var.user}",
       "chown ${var.user}:${var.user} /home/${var.user}/.??*",
-      "apk update && apk add make emacs-nox"
+      "apk update && apk add make git emacs-nox tmux nodejs"
     ]
   }
   post-processor "manifest" {}
