@@ -11,6 +11,7 @@ echo:
 	@ echo "BOX_IP set to $(BOX_IP)"
 	@ echo "LINODE_TOKEN set to $(LINODE_TOKEN)"
 	@ echo "PUBLIC_SSH_KEY set to $(PUBLIC_SSH_KEY)"
+
 clean:
 	if [ -d .terraform ]; then sudo chown -R $(OS_USER):$(OS_USER) .terraform; fi
 	rm -rf .terraform

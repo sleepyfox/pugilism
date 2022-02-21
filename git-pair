@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+PAIRS_CONFIG_PATH=~/.gitpairables
+
+if which tput >/dev/null 2>&1; then
+	bold=$(tput bold)
+	normal=$(tput sgr0)
+fi
+
+git_pair_help () {
+	echo "Usage:"
+	echo "  git pair [ list | add | reset | show | help ]"
+	echo "  git pair set <nickname-1> [<nickname-2> ... <nickname-n>]"
+	echo
+	echo "Commands:"
+	echo -e "  add\t\tinteractively add a new person's details"
+	echo -e "  list\t\tlist existing pairs"
+	echo -e "  show\t\tshow the current author name and email"
+	echo -e "  set\t\tset specified nicknames as the authors"
+	echo -e "  reset\t\tchange author settings back to the original"
+	echo -e "  help\t\tprint this information"
+}
+
+git_pair_list () {
+	echo The following nicknames have been added:
+	echo
+
+	cat <(echo Nickname,Name,Email) $PAIRS_CONFIG_PATH 2>/dev/null | grep -v __original__ | column -s, -t
+
+	echo
+	echo Use ${bold}git pair add${normal} to add more.
+}
+
+git_pair_add () {
+	if [ ! -e $PAIRS_CONFIG_PATH ]; then
+		_store_original
+	fi
+
+	read -p 'Nickname: ' nickname
+	read -p 'Name: ' name
+	read -p 'Email: ' email
+
+	grep -i ^$nickname, $PAIRS_CONFIG_PATH >/dev/null 2>&1 && exit 1
+
+	echo "$nickname,$name,$email" >> $PAIRS_CONFIG_PATH
+}
+
+_store_original () {
+	name=$(git config --get --global user.name)
+	email=$(git config --get --global user.email)
+
+	if [ -z "$name" ] || [ -z "$email" ]; then
+		return
+	fi
+
+	nickname="__original__"
+	echo "$nickname,$name,$email" >> $PAIRS_CONFIG_PATH
+}
+
+_construct_names_and_emails () {
+	local pair_nicks="$@"
+	local names=()
+	local emails=()
+
+	for nick in ${pair_nicks[*]}; do
+		local found_line=$(grep -i ^$nick, $PAIRS_CONFIG_PATH)
+
+		if [ -z "$found_line" ]; then
+			>&2 echo "${nick} is not a valid nickname; use ${bold}git pair add${normal} to add it."
+			exit 1
+		fi
+
+		names+=("`echo $found_line | cut -d',' -f2`")
+		emails+=("`echo $found_line | cut -d',' -f3`")
+	done
+
+	local names_joined=`printf "%s\n" "${names[@]}" | paste -d+ -s - | sed 's/+/ and /g'`
+
+	local email_ids=`printf "%s\n" "${emails[@]}" | cut -d@ -f1 | paste -d+ -s -`
+	local email_host=`echo ${emails[0]} | cut -d@ -f2`
+
+	echo $names_joined
+	echo "$email_ids@$email_host"
+}
+
+_set_pairs () {
+	if [ -z $1 ]; then
+		exit 1
+	fi
+
+	local num_args_to_drop=1
+
+	local names_and_emails=$(_construct_names_and_emails "${@:$num_args_to_drop}")
+	local names=$(echo "$names_and_emails" | head -1)
+	local emails=$(echo "$names_and_emails" | tail -1)
+
+	[ -z "$names" ] && exit 1
+	[ -z "$emails" ] && exit 1
+
+	local name_origin email_origin origins=$(_get_origins)
+	if [ $(echo "$origins" | wc -l | tr -d ' ') -eq 2 ]; then
+		name_origin=$(echo "$origins" | head -1)
+		email_origin=$(echo "$origins" | tail -1)
+	else
+		name_origin=".git/config"
+		email_origin=".git/config"
+	fi
+
+	git config --file $name_origin user.name "$names"
+	git config --file $email_origin user.email "$emails"
+
+	if [ $? -ne 0 ]; then
+		echo Unable to set git config. Are you in a git directory?
+	fi
+}
+
+git_pair_set () {
+	_set_pairs "$@"
+	git_pair_show
+}
+
+git_pair_reset () {
+	_set_pairs __original__ &>/dev/null
+	git_pair_show
+}
+
+git_pair_show () {
+	git config user.name
+	git config user.email
+}
+
+_get_origins () {
+	git config --show-origin user.name | grep -e '^file:' | cut -f1 | cut -d':' -f2
+	git config --show-origin user.email | grep -e '^file:' | cut -f1 | cut -d':' -f2
+}
+
+case "$1" in
+	help)
+		git_pair_help ;;
+
+	list)
+		git_pair_list ;;
+
+	add)
+		git_pair_add ;;
+
+	set)
+		git_pair_set "${@:2}" ;;
+
+	reset)
+		git_pair_reset ;;
+
+	show)
+		git_pair_show ;;
+
+	test)
+		_get_origins ;;
+
+	*)
+		git_pair_help
+		exit 1
+		;;
+esac
+
+exit $?
