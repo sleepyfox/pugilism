@@ -44,10 +44,6 @@ build {
     source = "dotfiles"
     destination = "/tmp"
   }
-  provisioner "file" {
-    source = "git-pair"
-    destination = "/tmp/git-pair"
-  }
   provisioner "shell" {
     inline = [
       "addgroup -g ${var.group_id} ${var.user}",
@@ -62,8 +58,8 @@ build {
       "chmod 600 /home/${var.user}/.ssh/authorized_keys",
       "cp /tmp/dotfiles/.[^.]* /home/${var.user}",
       "chown ${var.user}:${var.user} /home/${var.user}/.??*",
-      "cp /tmp/git-pair /usr/local/bin/git-pair",
-      "apk update && apk add make git emacs-nox tmux nodejs npm"
+      "apk update && apk add make git emacs-nox tmux nodejs npm",
+      "npm install -g git-pair"
     ]
   }
   post-processor "manifest" {}
